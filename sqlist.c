@@ -16,13 +16,13 @@ SqList* alloc_sq_list(size_t elem_size,size_t list_size){
     }
     memset(sq_list_p,0,sizeof(SqList));
     sq_list_p->elem_size=elem_size;
-    sq_list_p->list_size=list_size;
+    sq_list_p->capacity=list_size;
 
     //2.初始化buff
     if(list_size<=0){
         return sq_list_p;
     }
-    size_t elem_buf_size=sq_list_p->elem_size*sq_list_p->list_size;
+    size_t elem_buf_size=sq_list_p->elem_size*sq_list_p->capacity;
     sq_list_p->elem=malloc(elem_buf_size);    
     if(sq_list_p->elem==NULL){
         exit(-1);
@@ -97,19 +97,18 @@ int insert_sq_list(SqList* sq_list_p,void* elem,size_t position){
 
     int move_elem_count=sq_list_p->length - position;
 
-    if(sq_list_p->length >= sq_list_p->list_size){
+    if(sq_list_p->length >= sq_list_p->capacity){
         //已经满了，需要重新申请大小
-        int new_list_size=sq_list_p->list_size*2;
-        if(new_list_size==0){
-            new_list_size=2;
+        int new_capacity=sq_list_p->capacity*2;
+        if(new_capacity==0){
+            new_capacity=2;
         }
-        printf("insert_sq_list old list size:%d,new list size:%d\n",sq_list_p->list_size,new_list_size);
-        void* new_elem=realloc(sq_list_p->elem,new_list_size);
+        void* new_elem=realloc(sq_list_p->elem,new_capacity*sq_list_p->elem_size);
         if(new_elem==NULL){
             return -1;
         }
         sq_list_p->elem=new_elem; 
-        sq_list_p->list_size=new_list_size;
+        sq_list_p->capacity=new_capacity;
     }
 
     void* src=sq_list_p->elem+position*sq_list_p->elem_size;
@@ -117,7 +116,6 @@ int insert_sq_list(SqList* sq_list_p,void* elem,size_t position){
     size_t move_byte_count=move_elem_count*sq_list_p->elem_size;
     memcpy(dst,src,move_byte_count);
     ++sq_list_p->length;
-    printf("insert_sq_list move elem:%d move byte:%d\n",move_elem_count,move_byte_count,sq_list_p->length);
     return set_sq_list_elem(sq_list_p,elem,position);
 }
 
