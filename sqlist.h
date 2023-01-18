@@ -4,6 +4,11 @@
 
 #include<stdint.h>
 
+
+/*
+其实应该注入一个elem的析构函数，todo
+*/
+
 typedef struct SqList
 {
     void* elem;

@@ -25,6 +25,7 @@ SqList* alloc_sq_list(size_t elem_size,size_t list_size){
     size_t elem_buf_size=sq_list_p->elem_size*sq_list_p->capacity;
     sq_list_p->elem=malloc(elem_buf_size);    
     if(sq_list_p->elem==NULL){
+        free(sq_list_p);
         exit(-1);
         return NULL;
     }
