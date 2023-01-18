@@ -18,10 +18,14 @@ int print_sq_list(SqList* sq_list_ptr){
     printf("}\n");
 }
 
+void just_print(void* data,size_t elem_size){
+    printf("just_print");
+}
+
 int test(){
     int ret;
     SqList* sq_list_ptr;
-    ret=init_sq_list(&sq_list_ptr,sizeof(int),0);
+    ret=init_sq_list(&sq_list_ptr,sizeof(int),0,just_print);
     if(ret!=0){
         goto clean;
     }
