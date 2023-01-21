@@ -1,14 +1,15 @@
-#ifndef LINK_LIST_H
-#define LINK_LIST_H
-#include<stdint.h>
+#ifndef LIKN_LIST_H
+#define LIKN_LIST_H
 
-/*
-其实应该注入一个elem的析构函数，todo，在删除的时候使用
-*/
+#include<stdint.h>
+#include"life_cycle.h"
+
 
 struct LinkListElem;
-
 typedef struct LinkListElem LinkListElem;
+
+struct LinkList;
+typedef struct LinkList LinkList;
 
 struct LinkListElem
 {
@@ -19,27 +20,13 @@ struct LinkListElem
 };
 
 
-
-
-
-struct LinkList;
-typedef struct LinkList LinkList;
-
-
-
-
-
 struct LinkList
 {
     LinkListElem root;
     size_t elem_size;
     size_t length;
+    LifeCycle elem_life_cycle;
 };
 
 
-
-LinkList* alloc_link_list(size_t elem_size);
-
-// int insert_link_list_after_elem(LinkList* link_list,void* elem,LinkListElem* mark);
-
-#endif
+#endif 

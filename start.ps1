@@ -1,7 +1,8 @@
 rm test.exe
 # ./test
 gcc -g `
-main.c `
-sqlist.c `
+main.tmp.c `
+sq_list.c `
+life_cycle.c `
 -o test
 ./test.exe

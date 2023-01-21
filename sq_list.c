@@ -1,94 +1,84 @@
-#include "sqlist.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
+#include"sq_list.h"
+#include<stdlib.h>
+#include<stdio.h>
+#include<errno.h>
+#include<string.h>
 
 void call_sq_list_elem_destructor(SqList* sq_list,size_t position){
     void* elem=sq_list->buf+sq_list->elem_size*position;
-    if(sq_list->elem_destructor==NULL){
-        exit(-1);
-    }
     sq_list->elem_life_cycle.destructor(elem);
     return ;
 }
 
-SqList* alloc_sq_list(size_t elem_size,size_t list_size,void (*elem_destructor)(void* elem,size_t elem_size)){
-    if(elem_size<=0 || list_size<0 || elem_destructor==NULL){
-        return NULL;
-    }
-    //1.初始化结构体
-    SqList* sq_list_p=malloc(sizeof(SqList));
-    if(sq_list_p==NULL){
-        exit(-1);
-        return NULL;
-    }
-    memset(sq_list_p,0,sizeof(SqList));
-    sq_list_p->elem_size=elem_size;
-    sq_list_p->capacity=list_size;
-    sq_list_p->elem_destructor=elem_destructor;
+void call_sq_list_elem_copy_constructor(SqList* sq_list,size_t position,const void* src){
+    void* dst=sq_list->buf+sq_list->elem_size*position;
+    sq_list->elem_life_cycle.copy_constructor(dst,src);
+    return ;
+}
 
-    //2.初始化buff
-    if(list_size<=0){
+
+
+SqList* alloc_sq_list(size_t elem_size,size_t capacity,LifeCycle elem_life_cycle){
+    if(elem_size<=0 || check_life_cycle(elem_life_cycle)!=0){
+        return NULL;
+    }
+
+    SqList* sq_list_p =(SqList*)malloc(sizeof(SqList));
+    if(sq_list_p==NULL){
+        printf("alloc_sq_list malloc 1 errno:%d %s",errno,strerror(errno));
+        exit(errno);
+    }
+
+    memset(sq_list_p,0,sizeof(SqList));
+    sq_list_p->capacity=capacity;
+    sq_list_p->elem_life_cycle=elem_life_cycle;
+    sq_list_p->elem_size=elem_size;
+    sq_list_p->length=0;
+    sq_list_p->buf= NULL ;
+
+    if(sq_list_p->capacity==0){
         return sq_list_p;
     }
-    size_t elem_buf_size=sq_list_p->elem_size*sq_list_p->capacity;
-    sq_list_p->buf=malloc(elem_buf_size);    
-    if(sq_list_p->buf==NULL){
-        free(sq_list_p);
-        exit(-1);
-        return NULL;
-    }
-    
-    if(sq_list_p->elem_destructor==NULL){
-        exit(-1);
-    }
+
+    size_t buf_size = sq_list_p->capacity*sq_list_p->elem_size;
+    sq_list_p->buf = malloc(buf_size);
+
     return sq_list_p;
 }
 
 
-int init_sq_list(SqList** sq_list_pp,size_t elem_size,size_t list_size,void (*elem_destructor)(void* elem,size_t elem_size)){
-    *sq_list_pp=alloc_sq_list(elem_size,list_size,elem_destructor);
-    if(*sq_list_pp==NULL){
-        return -1;
-    }
-    return 0;
-}
-
-
 int free_sq_list(SqList** sq_list_pp){
-    if(sq_list_pp==NULL){
+    if(sq_list_pp==NULL || *sq_list_pp==NULL){
         return -1;
     }
-    SqList* sq_list_p= *sq_list_pp;
-    if(sq_list_p==NULL){
-        return -1;
-    }
-    for(int i=0;i<sq_list_p->length;++i){
-        // sq_list_p->elem_destructor(sq_list_p->elem+);
+
+    SqList* sq_list_p = *sq_list_pp;
+
+    for(int i=0;i< sq_list_p->length;++i){
         call_sq_list_elem_destructor(sq_list_p,i);
     }
+
     free(sq_list_p->buf);
     sq_list_p->buf=NULL;
 
-    free(*sq_list_pp);
+    free(sq_list_p);
+
     *sq_list_pp=NULL;
-    return 0;
 }
 
 
-int get_sq_list_elem(SqList* sq_list_p,int postion,void* result){
+int get_sq_list_elem(SqList* sq_list_p,int postion,void** result){
     if(sq_list_p==NULL){
         return -1;
     }
     if(postion<0 ||postion>=sq_list_p->length){
         return -1;
     }
-    memcpy(result,sq_list_p->buf+sq_list_p->elem_size*postion,sq_list_p->elem_size);
+    *result=sq_list_p->buf+sq_list_p->elem_size*postion;
     return 0;
 }
 
-int set_sq_list_elem(SqList* sq_list_p,void* elem,int postion){
+int set_sq_list_elem(SqList* sq_list_p,const void* elem,int postion){
     if(sq_list_p==NULL){
         return -1;
     }
@@ -98,6 +88,7 @@ int set_sq_list_elem(SqList* sq_list_p,void* elem,int postion){
     memcpy(sq_list_p->buf+sq_list_p->elem_size*postion,
         elem,
         sq_list_p->elem_size);
+    call_sq_list_elem_copy_constructor(sq_list_p,postion,elem);
     return 0;
 }
 
@@ -124,7 +115,8 @@ int insert_sq_list(SqList* sq_list_p,void* elem,size_t position){
         }
         void* new_elem=realloc(sq_list_p->buf,new_capacity*sq_list_p->elem_size);
         if(new_elem==NULL){
-            return -1;
+            printf("insert_sq_list realloc 1 errno:%d %s",errno,strerror(errno));
+            exit(errno);
         }
         sq_list_p->buf=new_elem; 
         sq_list_p->capacity=new_capacity;
@@ -137,6 +129,7 @@ int insert_sq_list(SqList* sq_list_p,void* elem,size_t position){
     ++sq_list_p->length;
     return set_sq_list_elem(sq_list_p,elem,position);
 }
+
 
 int push_back_sq_list(SqList* sq_list_p,void* elem){
     if(sq_list_p==NULL){
@@ -163,3 +156,4 @@ int remove_sq_list(SqList* sq_list_p,size_t position){
     --sq_list_p->length;
     return 0;
 }
+

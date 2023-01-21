@@ -1,8 +1,8 @@
-#include "link_list.h"
+#include"link_list.h"
+#include<stdint.h>
 #include<stdlib.h>
-#include<string.h>
 
-LinkListElem* alloc_link_list_elem(void* data,size_t data_size){
+LinkListElem* alloc_link_list_elem(void* data,size_t data_size,LifeCycle elem_life_cycle){
     LinkListElem* link_list_elem_p=malloc(sizeof(LinkListElem));
     if(link_list_elem_p==NULL){
         exit(-1);
@@ -16,36 +16,38 @@ LinkListElem* alloc_link_list_elem(void* data,size_t data_size){
         return NULL;
     }
     memcpy(link_list_elem_p->elem,data,data_size);
+    elem_life_cycle.copy_constructor(link_list_elem_p->elem,data);
     return link_list_elem_p;
 }
 
-int free_link_list_elem(LinkListElem** link_list_elem_pp){
+
+int free_link_list_elem(LinkListElem** link_list_elem_pp,LifeCycle elem_life_cycle){
     if(link_list_elem_pp==NULL){
         return -1;
     }
-
-    LinkListElem* link_list_elem_p=*link_list_elem_pp;
+    LinkListElem* link_list_elem_p = *link_list_elem_pp;
     if(link_list_elem_p==NULL){
         return -1;
     }
+    elem_life_cycle.destructor(link_list_elem_p->elem);
     free(link_list_elem_p->elem);
-    //todo 可能不需要
-    link_list_elem_p->elem=NULL;
+
+    //todo 可有可无
+    link_list_elem_p->next=NULL;
+    link_list_elem_p->prew=NULL;
+
     free(link_list_elem_p);
+
     *link_list_elem_pp=NULL;
     return 0;
 }
 
-
-LinkList* alloc_link_list(size_t elem_size){
+LinkList* alloc_link_list(size_t elem_size,LifeCycle elem_life_cycle){
     //todo 可能为0也可以
     if(elem_size<=0){
         return NULL;
     }
-    LinkList* link_list = malloc(sizeof(LinkList));
-    if(link_list==NULL){
-        return NULL;
-    }
+    LinkList* link_list= malloc(sizeof(LinkList));
     memset(link_list,0,sizeof(LinkList));
     link_list->elem_size=elem_size;
     link_list->length=0;
@@ -71,38 +73,14 @@ int free_link_list(LinkList** link_list_pp){
     LinkListElem* next=NULL;
     while(root!=cur){
         next = cur->next;
-        //todo 链表如果释放内存到一半，失败了，要如何处理，这个得具体的考量一下
-        int ret=free_link_list_elem(&cur);
+        int ret=free_link_list_elem(&cur,link_list_p->elem_life_cycle);
         if(ret!=0){
             return ret;
         }
         cur = next;
     }
-
     free(link_list_p);
     *link_list_pp=NULL;
-}
-
-
-LinkListElem* get_link_list_front(LinkList* link_list_p){
-    if(link_list_p==NULL){
-        return NULL;
-    }
-    if(link_list_p->length==0){
-        return NULL;
-    }
-    return link_list_p->root.next;
-}
-
-LinkListElem* get_link_list_back(LinkList* link_list_p){
-    if(link_list_p==NULL){
-        return NULL;
-    }
-    
-    if(link_list_p->length==0){
-        return NULL;
-    }
-    return link_list_p->root.prew;
 }
 
 int insert_link_list_after_elem(LinkListElem* elem,LinkListElem* mark){
@@ -126,11 +104,13 @@ int insert_link_list_before_elem(LinkListElem* elem,LinkListElem* mark){
     return insert_link_list_after_elem(elem,mark->prew);
 }
 
+
+
 int push_back_link_list(LinkList* link_list_p, void* data){
     if(link_list_p==NULL || data==NULL){
         return -1;
     }
-    LinkListElem* elem= alloc_link_list_elem(data,link_list_p->elem_size);
+    LinkListElem* elem= alloc_link_list_elem(data,link_list_p->elem_size,link_list_p->elem_life_cycle);
     return insert_link_list_before_elem(&link_list_p->root,elem);
 }
 
@@ -139,25 +119,33 @@ int push_front_link_list(LinkList* link_list_p, void* data){
     if(link_list_p==NULL || data==NULL){
         return -1;
     }
-    LinkListElem* elem= alloc_link_list_elem(data,link_list_p->elem_size);
+    LinkListElem* elem= alloc_link_list_elem(data,link_list_p->elem_size,link_list_p->elem_life_cycle);
     return insert_link_list_after_elem(&link_list_p->root,elem);
 }
 
+int remove_link_list_elem(LinkList* link_list_p,LinkListElem* link_list_elem_p){
+    if(link_list_p==NULL || link_list_elem_p==NULL){
+        return -1;
+    }
+
+    if(link_list_elem_p->link_list!=link_list_p){
+        return -1;
+    }
 
 
-// int remove_link_list_elem(LinkList* link_list_p,LinkListElem* link_list_elem_p){
-//     if(link_list_p==NULL || link_list_elem_p==NULL){
-//         return -1;
-//     }
-
-//     if(link_list_elem_p->link_list!=link_list_p){
-//         return -1;
-//     }
+    if(link_list_elem_p==&link_list_p->root){
+        return -1;
+    }
 
 
-//     if(link_list_elem_p==&link_list_p->root){
-//         return -1;
-//     }
+    LinkListElem* link_list_elem_prew_p= link_list_elem_p->prew;
+    LinkListElem* link_list_elem_next_p= link_list_elem_p->next;
 
-//     --link_list_p->length;
-// }
+    link_list_elem_prew_p->next=link_list_elem_next_p;
+    link_list_elem_next_p->prew=link_list_elem_prew_p;
+    --link_list_p->length;
+
+
+    free_link_list_elem(&link_list_elem_p,link_list_p->elem_life_cycle);
+    return 0;
+}
