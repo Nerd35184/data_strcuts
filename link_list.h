@@ -2,6 +2,7 @@
 #define LIKN_LIST_H
 
 #include<stdint.h>
+#include<string.h>
 #include"life_cycle.h"
 
 
@@ -27,6 +28,13 @@ struct LinkList
     size_t length;
     LifeCycle elem_life_cycle;
 };
+LinkList* alloc_link_list(size_t elem_size,LifeCycle elem_life_cycle);
 
-
+int push_back_link_list(LinkList* link_list_p, void* data);
+int push_front_link_list(LinkList* link_list_p, void* data);
+int remove_link_list_elem(LinkList* link_list_p,LinkListElem* link_list_elem_p);
+LinkListElem* get_link_list_front(LinkList* link_list_p);
+LinkListElem* get_link_list_elem_next(LinkListElem* link_list_elem_p);
+int free_link_list_elem(LinkListElem** link_list_elem_pp,LifeCycle elem_life_cycle);
+int free_link_list(LinkList** link_list_pp);
 #endif 

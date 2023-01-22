@@ -64,6 +64,7 @@ int free_sq_list(SqList** sq_list_pp){
     free(sq_list_p);
 
     *sq_list_pp=NULL;
+    return 0;
 }
 
 

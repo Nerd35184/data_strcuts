@@ -3,7 +3,7 @@
 #include"life_cycle.h"
 #include"sq_list.h"
 #include<stdio.h>
-int print_sq_list(SqList* sq_list_p){
+int print_int_sq_list(SqList* sq_list_p){
     int ret=0;
     printf("{\n");
     for(int i=0;i<sq_list_p->length;++i){
@@ -68,7 +68,7 @@ int main(){
     if(ret!=0){
         goto clean;
     }
-    print_sq_list(sq_list_ptr);
+    print_int_sq_list(sq_list_ptr);
     ret=remove_sq_list(sq_list_ptr,2);
     if(ret!=0){
         goto clean;
@@ -93,7 +93,7 @@ int main(){
     if(ret!=0){
         goto clean;
     }
-    print_sq_list(sq_list_ptr);
+    print_int_sq_list(sq_list_ptr);
 clean:
     if(sq_list_ptr!=NULL){
         free_sq_list(&sq_list_ptr);
