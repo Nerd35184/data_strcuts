@@ -47,9 +47,9 @@ SqList* alloc_sq_list(size_t elem_size,size_t capacity,LifeCycle elem_life_cycle
 }
 
 
-int free_sq_list(SqList** sq_list_pp){
+void free_sq_list(SqList** sq_list_pp){
     if(sq_list_pp==NULL || *sq_list_pp==NULL){
-        return -1;
+        return ;
     }
 
     SqList* sq_list_p = *sq_list_pp;
@@ -64,7 +64,7 @@ int free_sq_list(SqList** sq_list_pp){
     free(sq_list_p);
 
     *sq_list_pp=NULL;
-    return 0;
+    return ;
 }
 
 

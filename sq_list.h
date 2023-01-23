@@ -18,7 +18,7 @@ struct SqList
 typedef struct SqList  SqList;
 
 SqList* alloc_sq_list(size_t elem_size,size_t capacity,LifeCycle elem_life_cycle);
-int free_sq_list(SqList** sq_list_pp);
+void free_sq_list(SqList** sq_list_pp);
 int get_sq_list_elem(SqList* sq_list_p,int postion,void** result);
 int set_sq_list_elem(SqList* sq_list_p,const void* elem,int postion);
 int insert_sq_list(SqList* sq_list_p,void* elem,size_t position);

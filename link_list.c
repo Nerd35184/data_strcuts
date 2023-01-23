@@ -1,8 +1,13 @@
 #include"link_list.h"
 #include<stdint.h>
 #include<stdlib.h>
+#include<assert.h>
 
-LinkListElem* alloc_link_list_elem(void* data,size_t data_size,LifeCycle elem_life_cycle){
+LinkListElem* alloc_link_list_elem(const void* data,size_t data_size,LifeCycle elem_life_cycle){
+    if(data==NULL || data_size==0 || check_life_cycle(elem_life_cycle)!=0){
+        return NULL;
+    }
+
     LinkListElem* link_list_elem_p=malloc(sizeof(LinkListElem));
     if(link_list_elem_p==NULL){
         exit(-1);
@@ -21,13 +26,13 @@ LinkListElem* alloc_link_list_elem(void* data,size_t data_size,LifeCycle elem_li
 }
 
 
-int free_link_list_elem(LinkListElem** link_list_elem_pp,LifeCycle elem_life_cycle){
+void free_link_list_elem(LinkListElem** link_list_elem_pp,LifeCycle elem_life_cycle){
     if(link_list_elem_pp==NULL){
-        return -1;
+        return ;
     }
     LinkListElem* link_list_elem_p = *link_list_elem_pp;
     if(link_list_elem_p==NULL){
-        return -1;
+        return ;
     }
     elem_life_cycle.destructor(link_list_elem_p->elem);
     free(link_list_elem_p->elem);
@@ -39,7 +44,7 @@ int free_link_list_elem(LinkListElem** link_list_elem_pp,LifeCycle elem_life_cyc
     free(link_list_elem_p);
 
     *link_list_elem_pp=NULL;
-    return 0;
+    return ;
 }
 
 LinkList* alloc_link_list(size_t elem_size,LifeCycle elem_life_cycle){
@@ -64,27 +69,24 @@ LinkList* alloc_link_list(size_t elem_size,LifeCycle elem_life_cycle){
 }
 
 
-int free_link_list(LinkList** link_list_pp){
+void free_link_list(LinkList** link_list_pp){
     if(link_list_pp==NULL){
-        return -1;
+        return ;
     }
     LinkList* link_list_p=*link_list_pp;
     if(link_list_p==NULL){
-        return -1;
+        return ;
     }
 
     LinkListElem* cur=get_link_list_front(link_list_p);
     for(int i=0;cur!=NULL;++i){
         LinkListElem* next = get_link_list_elem_next(cur);
-        int ret=free_link_list_elem(&cur,link_list_p->elem_life_cycle);
-        if(ret!=0){
-            return ret;
-        }   
+        free_link_list_elem(&cur,link_list_p->elem_life_cycle);
         cur=next;
     }
     free(link_list_p);
     *link_list_pp=NULL;
-    return 0;
+    return ;
 }
 
 int insert_link_list_after_elem(LinkListElem* elem,LinkListElem* mark){

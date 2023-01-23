@@ -35,6 +35,6 @@ int push_front_link_list(LinkList* link_list_p, void* data);
 int remove_link_list_elem(LinkList* link_list_p,LinkListElem* link_list_elem_p);
 LinkListElem* get_link_list_front(LinkList* link_list_p);
 LinkListElem* get_link_list_elem_next(LinkListElem* link_list_elem_p);
-int free_link_list_elem(LinkListElem** link_list_elem_pp,LifeCycle elem_life_cycle);
-int free_link_list(LinkList** link_list_pp);
+void free_link_list_elem(LinkListElem** link_list_elem_pp,LifeCycle elem_life_cycle);
+void free_link_list(LinkList** link_list_pp);
 #endif 
